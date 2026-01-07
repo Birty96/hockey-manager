@@ -4,7 +4,6 @@ import { prisma } from '../lib/prisma';
 import { config } from '../config/env';
 import { LoginInput, RegisterInput, ChangePasswordInput } from '../schemas/auth.schema';
 import { ApiError } from '../middleware/error';
-import { Role } from '@prisma/client';
 
 const SALT_ROUNDS = 12;
 
@@ -30,7 +29,7 @@ export class AuthService {
       data: {
         email: data.email.toLowerCase(),
         passwordHash,
-        role: data.role as Role,
+        role: data.role,
         isApproved: !!approvedById,
         approvedAt: approvedById ? new Date() : null,
         approvedById: approvedById || null,

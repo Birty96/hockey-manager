@@ -1,18 +1,26 @@
 import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from './auth';
-import { Role } from '@prisma/client';
+
+// Role constants (matching schema.prisma valid values)
+export const Role = {
+  ADMIN: 'ADMIN',
+  COACH: 'COACH',
+  PLAYER: 'PLAYER',
+} as const;
+
+export type RoleType = (typeof Role)[keyof typeof Role];
 
 /**
  * Middleware to require specific roles for access
  */
-export function requireRole(...allowedRoles: Role[]) {
+export function requireRole(...allowedRoles: string[]) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
       res.status(401).json({ error: 'Authentication required' });
       return;
     }
     
-    if (!allowedRoles.includes(req.user.role as Role)) {
+    if (!allowedRoles.includes(req.user.role)) {
       res.status(403).json({ error: 'Insufficient permissions' });
       return;
     }
