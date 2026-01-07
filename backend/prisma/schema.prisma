@@ -13,7 +13,7 @@ model User {
   id           String      @id @default(cuid())
   email        String      @unique
   passwordHash String
-  role         Role        @default(PLAYER)
+  role         String      @default("PLAYER") // ADMIN, COACH, PLAYER
   isApproved   Boolean     @default(false)
   approvedAt   DateTime?
   approvedById String?
@@ -30,12 +30,6 @@ model User {
   @@index([isApproved])
 }
 
-enum Role {
-  ADMIN
-  COACH
-  PLAYER
-}
-
 // ============ PLAYERS ============
 
 model Player {
@@ -43,8 +37,8 @@ model Player {
   firstName        String
   lastName         String
   jerseyNumber     Int?
-  position         Position
-  status           PlayerStatus       @default(ACTIVE)
+  position         String             // CENTER, LEFT_WING, RIGHT_WING, DEFENSE, GOALIE
+  status           String             @default("ACTIVE") // ACTIVE, INJURED, UNAVAILABLE, INACTIVE
   dateOfBirth      DateTime?
   phone            String?
   emergencyContact String?
@@ -68,21 +62,6 @@ model Player {
   stats            PlayerGameStats[]
 
   @@index([lastName, firstName])
-}
-
-enum Position {
-  CENTER
-  LEFT_WING
-  RIGHT_WING
-  DEFENSE
-  GOALIE
-}
-
-enum PlayerStatus {
-  ACTIVE
-  INJURED
-  UNAVAILABLE
-  INACTIVE
 }
 
 // ============ TEAMS ============
@@ -147,11 +126,11 @@ model Game {
   teamId       String
   opponent     String
   location     String
-  gameType     GameType           @default(REGULAR)
+  gameType     String             @default("REGULAR") // REGULAR, PLAYOFF, PRACTICE, SCRIMMAGE
   startTime    DateTime
   endTime      DateTime
   isHome       Boolean            @default(true)
-  status       GameStatus         @default(SCHEDULED)
+  status       String             @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED, POSTPONED
   rosterLocked Boolean            @default(false)
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
@@ -174,28 +153,13 @@ model Game {
   @@index([startTime])
 }
 
-enum GameType {
-  REGULAR
-  PLAYOFF
-  PRACTICE
-  SCRIMMAGE
-}
-
-enum GameStatus {
-  SCHEDULED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-  POSTPONED
-}
-
 // ============ AVAILABILITY ============
 
 model PlayerAvailability {
   id          String             @id @default(cuid())
   playerId    String
   gameId      String
-  status      AvailabilityStatus @default(PENDING)
+  status      String             @default("PENDING") // PENDING, AVAILABLE, UNAVAILABLE, MAYBE
   note        String?
   respondedAt DateTime?
   createdAt   DateTime           @default(now())
@@ -206,13 +170,6 @@ model PlayerAvailability {
   @@unique([playerId, gameId])
   @@index([gameId])
   @@index([playerId])
-}
-
-enum AvailabilityStatus {
-  PENDING
-  AVAILABLE
-  UNAVAILABLE
-  MAYBE
 }
 
 // ============ ROSTERS & LINEUPS ============
