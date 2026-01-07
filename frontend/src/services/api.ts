@@ -87,7 +87,7 @@ export const authApi = {
     fetchApi<any>('/auth/register', {
       method: 'POST',
       body: { email, password, role },
-  },
+    }),
   
   getById: (id: string) =>
     fetchApi<any>(`/players/${id}`),
