@@ -47,7 +47,9 @@ app.use(generalLimiter);
 // Health check endpoint
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});Serve uploaded files (logos, etc.)
+});
+
+// Serve uploaded files (logos, etc.)
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // API routes
@@ -56,8 +58,7 @@ app.use('/api/players', playerRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/stats', statsRoutes);
-app.use('/api/uploads', uploadoutes);
-app.use('/api/games', gameRoutes);
+app.use('/api/uploads', uploadRoutes);
 app.use('/api/stats', statsRoutes);
 
 // 404 handler
