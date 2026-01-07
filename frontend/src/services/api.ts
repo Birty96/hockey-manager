@@ -88,7 +88,13 @@ export const authApi = {
       method: 'POST',
       body: { email, password, role },
     }),
-  
+};
+
+// Players API
+export const playersApi = {
+  getAll: () =>
+    fetchApi<any[]>('/players'),
+
   getById: (id: string) =>
     fetchApi<any>(`/players/${id}`),
   
