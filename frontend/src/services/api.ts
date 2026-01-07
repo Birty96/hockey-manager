@@ -222,3 +222,22 @@ export const statsApi = {
   getTeamStats: (teamId: string) =>
     fetchApi<any[]>(`/stats/team/${teamId}`),
 };
+
+// Leagues API
+export const leaguesApi = {
+  getAll: () =>
+    fetchApi<any[]>('/leagues'),
+
+  getById: (id: string) =>
+    fetchApi<any>(/leagues/+id),
+
+  create: (data: any) =>
+    fetchApi<any>('/leagues', { method: 'POST', body: data }),
+
+  update: (id: string, data: any) =>
+    fetchApi<any>(/leagues/+id, { method: 'PATCH', body: data }),
+
+  delete: (id: string) =>
+    fetchApi(/leagues/+id, { method: 'DELETE' }),
+};
+

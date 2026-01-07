@@ -13,6 +13,7 @@ import teamRoutes from './routes/team.routes';
 import gameRoutes from './routes/game.routes';
 import statsRoutes from './routes/stats.routes';
 import uploadRoutes from './routes/upload.routes';
+import leagueRoutes from './routes/league.routes';
 import path from 'path';
 
 const app = express();
@@ -59,7 +60,7 @@ app.use('/api/teams', teamRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/uploads', uploadRoutes);
-app.use('/api/stats', statsRoutes);
+app.use('/api/leagues', leagueRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

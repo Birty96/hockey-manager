@@ -13,6 +13,7 @@ import {
   UserCog,
   Sun,
   Moon,
+  Trophy,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -20,6 +21,7 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Players', href: '/players', icon: Users },
   { name: 'Teams', href: '/teams', icon: Shield },
+  { name: 'Leagues', href: '/leagues', icon: Trophy },
   { name: 'Schedule', href: '/schedule', icon: Calendar },
   { name: 'Stats', href: '/stats', icon: BarChart3 },
 ];

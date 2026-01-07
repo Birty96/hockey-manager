@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
-import { teamsApi } from '../services/api';
-import { Team } from '../types';
+import { teamsApi, leaguesApi } from '../services/api';
+import { Team, League } from '../types';
 import { Plus, Users, Calendar, Upload, X, Camera, Edit, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -11,6 +11,7 @@ interface TeamFormData {
   shortName: string;
   primaryColor: string;
   secondaryColor: string;
+  leagueId: string;
 }
 
 const emptyForm: TeamFormData = {
@@ -18,11 +19,13 @@ const emptyForm: TeamFormData = {
   shortName: '',
   primaryColor: '#1e40af',
   secondaryColor: '#ffffff',
+  leagueId: '',
 };
 
 export default function Teams() {
   const { user } = useAuth();
   const [teams, setTeams] = useState<Team[]>([]);
+  const [leagues, setLeagues] = useState<League[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [teamPlayers, setTeamPlayers] = useState<any[]>([]);
@@ -41,7 +44,17 @@ export default function Teams() {
 
   useEffect(() => {
     loadTeams();
+    loadLeagues();
   }, []);
+
+  async function loadLeagues() {
+    try {
+      const data = await leaguesApi.getAll();
+      setLeagues(data);
+    } catch (error) {
+      console.error('Failed to load leagues:', error);
+    }
+  }
 
   async function loadTeams() {
     try {
@@ -81,8 +94,9 @@ export default function Teams() {
     setFormData({
       name: team.name,
       shortName: team.shortName,
-      primaryColor: team.primaryColor,
-      secondaryColor: team.secondaryColor,
+      primaryColor: team.primaryColor || '#1e40af',
+      secondaryColor: team.secondaryColor || '#ffffff',
+      leagueId: team.leagueId || '',
     });
     setError(null);
     setShowModal(true);
@@ -93,11 +107,16 @@ export default function Teams() {
     setSaving(true);
     setError(null);
 
+    const payload = {
+      ...formData,
+      leagueId: formData.leagueId || null,
+    };
+
     try {
       if (editingTeam) {
-        await teamsApi.update(editingTeam.id, formData);
+        await teamsApi.update(editingTeam.id, payload);
       } else {
-        await teamsApi.create(formData);
+        await teamsApi.create(payload);
       }
       
       setShowModal(false);
@@ -229,7 +248,10 @@ export default function Teams() {
                   </div>
                   <div className="ml-4 flex-1">
                     <h3 className="font-semibold text-gray-900 dark:text-white">{team.name}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{team.shortName}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {team.shortName}
+                      {team.league && <span className="ml-2 text-xs bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">{team.league.shortName}</span>}
+                    </p>
                   </div>
                   {canEdit && (
                     <button
@@ -281,6 +303,11 @@ export default function Teams() {
                     <div className="ml-4">
                       <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedTeam.name}</h2>
                       <p className="text-gray-500 dark:text-gray-400">{selectedTeam.shortName}</p>
+                      {selectedTeam.league && (
+                        <p className="text-sm text-primary-600 dark:text-primary-400 mt-1">
+                          {selectedTeam.league.name}
+                        </p>
+                      )}
                       <div className="flex items-center mt-2 gap-2">
                         <div
                           className="w-6 h-6 rounded-full border-2 border-gray-200 dark:border-gray-600"
@@ -407,6 +434,24 @@ export default function Teams() {
                   placeholder="e.g. DUCKS"
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  League
+                </label>
+                <select
+                  value={formData.leagueId}
+                  onChange={(e) => setFormData({ ...formData, leagueId: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                >
+                  <option value="">No League</option>
+                  {leagues.map((league) => (
+                    <option key={league.id} value={league.id}>
+                      {league.name} ({league.shortName})
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

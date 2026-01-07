@@ -6,6 +6,7 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Players from './pages/Players';
 import Teams from './pages/Teams';
+import Leagues from './pages/Leagues';
 import Schedule from './pages/Schedule';
 import Stats from './pages/Stats';
 import UserManagement from './pages/UserManagement';
@@ -44,6 +45,7 @@ function App() {
         <Route index element={<Dashboard />} />
         <Route path="players" element={<Players />} />
         <Route path="teams" element={<Teams />} />
+        <Route path="leagues" element={<Leagues />} />
         <Route path="schedule" element={<Schedule />} />
         <Route path="stats" element={<Stats />} />
         <Route path="users" element={<UserManagement />} />

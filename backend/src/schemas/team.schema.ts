@@ -6,6 +6,7 @@ export const createTeamSchema = z.object({
   logoUrl: z.string().url().optional(),
   primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid hex color').optional(),
   secondaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid hex color').optional(),
+  leagueId: z.string().optional().nullable(),
 });
 
 export const updateTeamSchema = createTeamSchema.partial();

@@ -9,6 +9,9 @@ export class TeamService {
   async findAll() {
     const teams = await prisma.team.findMany({
       include: {
+        league: {
+          select: { id: true, name: true, shortName: true },
+        },
         _count: {
           select: {
             players: { where: { isActive: true } },

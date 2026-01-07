@@ -35,6 +35,15 @@ export interface Player {
   updatedAt: string;
 }
 
+// League types
+export interface League {
+  id: string;
+  name: string;
+  shortName: string;
+  description?: string;
+  teams?: Team[];
+}
+
 // Team types
 export interface Team {
   id: string;
@@ -43,6 +52,8 @@ export interface Team {
   logoUrl?: string;
   primaryColor?: string;
   secondaryColor?: string;
+  leagueId?: string | null;
+  league?: League | null;
   playerCount?: number;
   gameCount?: number;
 }
