@@ -1,0 +1,276 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============ USER & AUTH ============
+
+model User {
+  id           String      @id @default(cuid())
+  email        String      @unique
+  passwordHash String
+  role         Role        @default(PLAYER)
+  isApproved   Boolean     @default(false)
+  approvedAt   DateTime?
+  approvedById String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // A user can be linked to a player profile (optional for admins)
+  player       Player?
+
+  // Coaches are linked to teams they manage
+  coachedTeams TeamCoach[]
+
+  @@index([email])
+  @@index([isApproved])
+}
+
+enum Role {
+  ADMIN
+  COACH
+  PLAYER
+}
+
+// ============ PLAYERS ============
+
+model Player {
+  id               String             @id @default(cuid())
+  firstName        String
+  lastName         String
+  jerseyNumber     Int?
+  position         Position
+  status           PlayerStatus       @default(ACTIVE)
+  dateOfBirth      DateTime?
+  phone            String?
+  emergencyContact String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  // Link to user account (for player login)
+  userId           String?            @unique
+  user             User?              @relation(fields: [userId], references: [id])
+
+  // Many-to-many: player can belong to multiple teams
+  teamMemberships  TeamPlayer[]
+
+  // Availability declarations
+  availabilities   PlayerAvailability[]
+
+  // Game assignments (which games they're rostered for)
+  gameRosters      GameRoster[]
+
+  // Stats
+  stats            PlayerGameStats[]
+
+  @@index([lastName, firstName])
+}
+
+enum Position {
+  CENTER
+  LEFT_WING
+  RIGHT_WING
+  DEFENSE
+  GOALIE
+}
+
+enum PlayerStatus {
+  ACTIVE
+  INJURED
+  UNAVAILABLE
+  INACTIVE
+}
+
+// ============ TEAMS ============
+
+model Team {
+  id             String       @id @default(cuid())
+  name           String       @unique
+  shortName      String       @unique
+  logoUrl        String?
+  primaryColor   String?
+  secondaryColor String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Team members (shared player pool)
+  players        TeamPlayer[]
+
+  // Coaches assigned to this team
+  coaches        TeamCoach[]
+
+  // Games this team plays
+  games          Game[]
+
+  @@index([name])
+}
+
+// Junction table: Player <-> Team (many-to-many)
+model TeamPlayer {
+  id       String   @id @default(cuid())
+  playerId String
+  teamId   String
+  joinedAt DateTime @default(now())
+  isActive Boolean  @default(true)
+
+  player   Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, teamId])
+  @@index([teamId])
+  @@index([playerId])
+}
+
+// Junction table: User (Coach) <-> Team
+model TeamCoach {
+  id          String   @id @default(cuid())
+  userId      String
+  teamId      String
+  isHeadCoach Boolean  @default(false)
+  assignedAt  DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, teamId])
+  @@index([teamId])
+}
+
+// ============ SCHEDULING ============
+
+model Game {
+  id           String             @id @default(cuid())
+  teamId       String
+  opponent     String
+  location     String
+  gameType     GameType           @default(REGULAR)
+  startTime    DateTime
+  endTime      DateTime
+  isHome       Boolean            @default(true)
+  status       GameStatus         @default(SCHEDULED)
+  rosterLocked Boolean            @default(false)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  team         Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  // Players rostered for this game
+  roster       GameRoster[]
+
+  // Lineup configuration
+  lineup       Lineup?
+
+  // Player stats for this game
+  stats        PlayerGameStats[]
+
+  // Availability responses for this game
+  availabilities PlayerAvailability[]
+
+  @@index([teamId, startTime])
+  @@index([startTime])
+}
+
+enum GameType {
+  REGULAR
+  PLAYOFF
+  PRACTICE
+  SCRIMMAGE
+}
+
+enum GameStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  POSTPONED
+}
+
+// ============ AVAILABILITY ============
+
+model PlayerAvailability {
+  id          String             @id @default(cuid())
+  playerId    String
+  gameId      String
+  status      AvailabilityStatus @default(PENDING)
+  note        String?
+  respondedAt DateTime?
+  createdAt   DateTime           @default(now())
+
+  player      Player             @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  game        Game               @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, gameId])
+  @@index([gameId])
+  @@index([playerId])
+}
+
+enum AvailabilityStatus {
+  PENDING
+  AVAILABLE
+  UNAVAILABLE
+  MAYBE
+}
+
+// ============ ROSTERS & LINEUPS ============
+
+// Players assigned to a specific game
+model GameRoster {
+  id       String   @id @default(cuid())
+  gameId   String
+  playerId String
+  addedAt  DateTime @default(now())
+
+  game     Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  player   Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, playerId])
+  @@index([gameId])
+}
+
+// Lineup configuration for a game
+model Lineup {
+  id            String   @id @default(cuid())
+  gameId        String   @unique
+
+  // Store lineup as JSON string for SQLite compatibility
+  configuration String
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  game          Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+}
+
+// ============ STATISTICS ============
+
+model PlayerGameStats {
+  id           String   @id @default(cuid())
+  playerId     String
+  gameId       String
+
+  // Skater stats
+  goals        Int      @default(0)
+  assists      Int      @default(0)
+  plusMinus    Int      @default(0)
+  pim          Int      @default(0)
+  shots        Int      @default(0)
+
+  // Goalie stats (only populated for goalies)
+  saves        Int?
+  goalsAgainst Int?
+  shotsAgainst Int?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  player       Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  game         Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, gameId])
+  @@index([playerId])
+  @@index([gameId])
+}
